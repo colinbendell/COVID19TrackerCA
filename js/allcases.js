@@ -19,7 +19,7 @@ $(document).ready(() => {
 
     // get last days
     $.ajax({
-        url: api_url + "reports?fill_dates=true",
+        url: api_url + "reports.json",
         type: "GET",
     }).then(res => {
         fillNulls(res.data);
@@ -28,7 +28,7 @@ $(document).ready(() => {
 
     // update header
     $.ajax({
-        url: api_url + "summary" + (province ? "/split" : ""),
+        url: api_url + (province ? "split.json" : "summary.json"),
         type: "GET"
     }).then(res => {
         var data = !province ? res.data[0] : res.data.filter(item => item.province === province)[0];
@@ -108,7 +108,7 @@ function buildTable(province) {
         "searching": false,
         "bSort" : false,
         "ajax": {
-            url: api_url + "cases?" + (province ? ("&province=" + province) : ""),
+            url: api_url + (province ? province + "-cases.json" : "cases.json"),
             dataFilter: function(data) {
                 var json = jQuery.parseJSON(data);
                 json.recordsTotal = json.total;

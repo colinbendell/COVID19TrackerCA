@@ -19,7 +19,7 @@ $(document).ready(() => {
 
     // update regions list
     $.ajax({
-        url: devapi_url + "regions",
+        url: api_url + "regions.json",
         type: "GET"
     }).then(res => {
         parseRegions(res.data, regions);
@@ -37,7 +37,7 @@ $(document).ready(() => {
         $("#individualCaseTableDiv").closest(".card").hide();
 
         $.ajax({
-            url: devapi_url + "regions/" + value + "/reports",
+            url: api_url + value + ".json",
             type: "GET"
         }).then(res => {
             if (!res.data || !res.data.length || res.data.length < 2) {
@@ -152,7 +152,7 @@ $(document).ready(() => {
 
         // update header
         $.ajax({
-            url: api_url + "summary/split",
+            url: api_url + "split.json",
             type: "GET"
         }).then(res => {
             var province = res.data.filter(item => item.province === code)[0];
@@ -187,7 +187,7 @@ $(document).ready(() => {
 
         // update graphs
         $.ajax({
-            url: api_url + "reports/province/" + code,
+            url: api_url + code + ".json",
             type: "GET"
         }).then(res => {
             last5days = getLast5Days(res.data, "total_");
@@ -196,7 +196,7 @@ $(document).ready(() => {
 
         // update table
         $.ajax({
-            url: api_url + "cases?province=" + code,
+            url: api_url + code + "-cases.json",
             type: "GET"
         }).then(res => {
             buildTable(res.data);

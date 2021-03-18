@@ -12,12 +12,12 @@ $(document).ready(() => {
 
         // update graphs
         $.ajax({
-            url: api_url + "reports/province/" + code1,
+            url: api_url + code1 + ".json",
             type: "GET"
         }).then(res => {
             let province1Data = res.data;
             $.ajax({
-                url: api_url + "reports/province/" + code2,
+                url: api_url + code2 + ".json",
                 type: "GET"
             }).then(res2 => {
                 let province2Data = res2.data;

@@ -16,7 +16,7 @@ $(document).ready(() => {
 
     // get and update header, and cases by province table footer
     $.ajax({
-        url: api_url + "summary"
+        url: api_url + "summary.json"
     }).then(res => {
         var data = res.data[0];
 
@@ -171,13 +171,13 @@ $(document).ready(() => {
 
     // draw map and cases by province graph and table
     $.ajax({
-        url: api_url + "summary/split",
+        url: api_url + "split.json",
         type: "GET",
     }).then(res => {
         drawMap(res.data);
         barGraph(res.data, "#provinceCasesChart");
         $.ajax({
-            url: api_url + "provinces"
+            url: api_url + "provinces.json"
         }).then(res2 => {
             buildProvinceTable(res.data, res2);
         });
@@ -185,7 +185,7 @@ $(document).ready(() => {
 
     // draw new and cumulative cases graphs
     $.ajax({
-        url: api_url + "reports?fill_dates=true",
+        url: api_url + "reports.json",
         type: "GET",
     }).then(res => {
         fillNulls(res.data);
@@ -196,7 +196,7 @@ $(document).ready(() => {
 
     // draw latest cases table
     $.ajax({
-        url: api_url + "cases",
+        url: api_url + "cases.json",
         type: "GET",
     }).then(res => {
 
@@ -241,7 +241,7 @@ $(document).ready(() => {
 
     // get notice
     $.ajax({
-        url: devapi_url + "notes",
+        url: api_url + "notes.json",
         type: "GET",
     }).then(res => {
         var data = res;
@@ -255,13 +255,13 @@ $(document).ready(() => {
 
     // update regions list
     $.ajax({
-        url: devapi_url + "regions",
+        url: api_url + "regions.json",
         type: "GET"
     }).then(res => {
         parseRegions(res.data, regions);
         // update regions list
         $.ajax({
-            url: devapi_url + "summary/split/hr",
+            url: devapi_url + "hr.json",
             type: "GET"
         }).then(regionData => {
             if (regionData && regionData.data && regionData.data.length) {

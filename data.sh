@@ -29,7 +29,23 @@ curl -s https://api.covid19tracker.ca/province/QC/regions -o data/QC-regions.jso
 curl -s https://api.covid19tracker.ca/province/SK/regions -o data/SK-regions.json
 curl -s https://api.covid19tracker.ca/province/YT/regions -o data/YT-regions.json
 
+curl -s https://api.covid19tracker.ca/cases\?province=ON -o data/ON-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=AB -o data/AB-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=BC -o data/BC-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=MB -o data/MB-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=NB -o data/NB-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=NL -o data/NL-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=NS -o data/NS-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=NT -o data/NT-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=NU -o data/NU-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=ON -o data/ON-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=PE -o data/PE-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=QC -o data/QC-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=SK -o data/SK-cases.json
+curl -s https://api.covid19tracker.ca/cases\?province=YT -o data/YT-cases.json
+
 curl -s https://api.covid19tracker.ca/provinces -o data/provinces.json
+curl -s https://api.covid19tracker.ca/regions -o data/regions.json
 curl -s https://api.covid19tracker.ca/summary/split/hr -o data/hr.json
 curl -s https://api.covid19tracker.ca/summary -o data/summary.json
 curl -s https://api.covid19tracker.ca/summary/split -o data/split.json
