@@ -261,7 +261,7 @@ $(document).ready(() => {
         parseRegions(res.data, regions);
         // update regions list
         $.ajax({
-            url: devapi_url + "hr.json",
+            url: api_url + "hr.json",
             type: "GET"
         }).then(regionData => {
             if (regionData && regionData.data && regionData.data.length) {
