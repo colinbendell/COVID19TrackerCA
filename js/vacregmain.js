@@ -125,7 +125,7 @@ $(document).ready(() => {
 
     var provinces = [];
     $.ajax({
-        url: api_url + "provinces"
+        url: api_url + "provinces.json"
     }).then(res => {
         provinces = res;
         var pCode = getParameterByName("p");
@@ -155,7 +155,7 @@ $(document).ready(() => {
         document.querySelector('title').textContent = `COVID-19 Tracker Canada - ${pText} Vaccination Tracker`;
 
         $.ajax({
-            url: api_url + "summary/split"
+            url: api_url + "split.json"
         }).then(res => {
             var data = res.data.find(function (_res) { return _res.province === pCode; });
 
@@ -232,10 +232,10 @@ $(document).ready(() => {
         });
 
         $.ajax({
-            url: api_url + "province/" + pCode + "/regions"
+            url: api_url + pCode + "-regions.json"
         }).then(res2 => {
             $.ajax({
-                url: api_url + "summary/split/hr"
+                url: api_url + "hr.json"
             }).then(res3 => {
                 var hrData = [];
                 var hrDataTable = [];
@@ -255,7 +255,7 @@ $(document).ready(() => {
         });
 
         $.ajax({
-            url: api_url + "reports/province/" + pCode + "?after=2020-12-10?fill_dates=true",
+            url: api_url + pCode + ".json",
             type: "GET",
         }).then(res => {
             fillNulls(res.data);
