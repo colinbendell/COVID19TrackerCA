@@ -33,140 +33,131 @@ function formatNumber(value) {
 }
 
 // Controls the state of the application, sets up correct data information
-$(document).ready(() => {
+window.addEventListener('DOMContentLoaded', async () => {
 
     // get and update header, and cases by province table footer
-    $.ajax({
-        url: api_url + "summary"
-    }).then(res => {
-        var data = res.data[0];
+    const res = await fetch(api_url + "summary.json");
+    const json = await res.json();
+    var data = json.data[0];
 
-        $("#activeCases").prop("checked", false);
-        $("#criticalCases").prop("checked", false);
+    $("#activeCases").prop("checked", false);
+    $("#criticalCases").prop("checked", false);
 
-       // totalCases = data.total_cases;
-       // totalCasesChange = data.change_cases;
-      //  activeCases = data.total_cases - data.total_fatalities - data.total_recoveries;
-       // activeCasesChange = data.change_cases - data.change_fatalities - data.change_recoveries;
-       // critical = data.total_criticals;
-       // criticalChange = data.change_criticals;
-       //  hospitalizations = data.total_hospitalizations;
-        // hospitalizationsChange = data.change_hospitalizations;
-        
-        vaccinations = data.total_vaccinations;
-        peopleVaccinated = data.total_vaccinations - data.total_vaccinated;
-        twoDoses = data.total_vaccinated;
-        percentVaccinated = Math.floor((data.total_vaccinations - data.total_vaccinated) / canadaPopulation * 100) / 100;
-        vaccinationsChange = data.change_vaccinations;
-        vaccinesDistributed = data.total_vaccines_distributed;
+   // totalCases = data.total_cases;
+   // totalCasesChange = data.change_cases;
+  //  activeCases = data.total_cases - data.total_fatalities - data.total_recoveries;
+   // activeCasesChange = data.change_cases - data.change_fatalities - data.change_recoveries;
+   // critical = data.total_criticals;
+   // criticalChange = data.change_criticals;
+   //  hospitalizations = data.total_hospitalizations;
+    // hospitalizationsChange = data.change_hospitalizations;
+    const canadaPopulation = 38008005;
 
-        // update timestamp
+    const vaccinations = data.total_vaccinations;
+    const peopleVaccinated = data.total_vaccinations - data.total_vaccinated;
+    const twoDoses = data.total_vaccinated;
+    const percentVaccinated = Math.floor((data.total_vaccinations - data.total_vaccinated) / canadaPopulation * 100) / 100;
+    const vaccinationsChange = data.change_vaccinations;
+    const vaccinesDistributed = data.total_vaccines_distributed;
 
+    // update timestamp
+    $("#updateTime").text("As of " + moment(res.last_updated).format("dddd [at] h:mm a [CST, ]"));
+    $("#updateVax").text(format(data.total_vaccinations));
+    $("#updateChangeVax").text(format(data.change_vaccinations));
+    $("#updateTwoDoses").text(format(data.total_vaccinated));
+    $("#updateVaxPpl").text(format(data.total_vaccinations - data.total_vaccinated));
+    $("#updateTotalDel").text(format(data.total_vaccines_distributed));
+    $("#updatePerAdm").text((((data.total_vaccinations) / (data.total_vaccines_distributed))*100).toFixed(1) + "%")
+    
+    // update header
+    $(".summary-header-cases > h1").text(data.total_cases + " cases");
+    $(".summary-header-cases > b").text(displayNewCases(data.change_cases));
+    $(".summary-header-deaths > h1").text(data.total_fatalities + " deaths");
+    $(".summary-header-deaths > b").text(displayNewCases(data.change_fatalities));
+    $(".summary-header-hospitalized > h1").text(data.total_hospitalizations + " hospitalized");
+    $(".summary-header-hospitalized > b").text(displayNewCases(data.change_hospitalizations));
+    $(".summary-header-recoveries > h1").text(data.total_recoveries + " recoveries");
+    $(".summary-header-recoveries > b").text(displayNewCases(data.change_recoveries));
+    $(".summary-header-percentVaccinated > h1").text((((data.total_vaccinations - data.total_vaccinated) / 38008005)*100).toFixed(3) + "%");
+    $(".summary-header-percentVaccinated > b").text("of the Canadian population has received at least one dose");
+    $(".summary-header-vaccinations > h1").text(format(data.total_vaccinations) + " doses administered");
+    $(".summary-header-vaccinations > b").text(displayNewCases(data.change_vaccinations));
+    $(".summary-header-pplVac > h1").text(data.total_vaccinations);
+    $(".summary-header-pplVac > b").text("people have received at least one dose");
+    $(".summary-header-vaccineDelivered > h1").text(format(data.total_vaccines_distributed) + " doses delivered");
+    $(".summary-header-vaccineDelivered > b").text((((data.total_vaccinations) / (data.total_vaccines_distributed))*100).toFixed(1) + "%" + " of doses delivered have been administered");
 
+    // update province table footer
+    const casesPer100000 = Math.floor(((100000 * data.total_cases) / canadaPopulation) * 100) / 100;
+    const fatalitiesPer100000 = Math.floor(((100000 * data.total_fatalities) / canadaPopulation) * 100) / 100;
+    const hospitalizationsPer100000 = Math.floor(((100000 * data.total_hospitalizations) / canadaPopulation) * 100) / 100;
+    const criticalsPer100000 = Math.floor(((100000 * data.total_criticals) / canadaPopulation) * 100) / 100;
+    const recoveriesPer100000 = Math.floor(((100000 * data.total_recoveries) / canadaPopulation) * 100) / 100;
+    const testsPer100000 = Math.floor(((100000 * data.total_tests) / canadaPopulation) * 100) / 100;
+    const vaccinationsPer100000 = Math.floor(((100000 * data.total_vaccinations) / canadaPopulation) * 100) / 100;
 
-        $("#updateTime").text("As of " + moment(res.last_updated).format("dddd [at] h:mm a [CST, ]"));
-        $("#updateVax").text(format(data.total_vaccinations));
-        $("#updateChangeVax").text(format(data.change_vaccinations));
-        $("#updateTwoDoses").text(format(data.total_vaccinated));
-        $("#updateVaxPpl").text(format(data.total_vaccinations - data.total_vaccinated));
-        $("#updateTotalDel").text(format(data.total_vaccines_distributed));
-        $("#updatePerAdm").text((((data.total_vaccinations) / (data.total_vaccines_distributed))*100).toFixed(1) + "%")
+    const vaccinationsPerCapita = Math.round(((data.total_vaccinations - data.total_vaccinated || 0)/ canadaPopulation) * 1000) / 10;
+    const casesPerCapita = Math.round((data.total_cases / canadaPopulation) * 1000) / 10;
+    const deathsPerCase = Math.round((data.total_fatalities / data.total_cases) * 1000) / 10;
+    const vaccinationsCompletePerCapita = Number.parseInt(data.total_vaccinated) > 0 ? Math.round((data.total_vaccinated / canadaPopulation) * 1000) / 10 : "N/A";
+    const vaccinationsPercent = Math.floor(((100 * data.total_vaccinations) / data.total_vaccines_distributed) * 100) / 100;
 
+    const itemTotalVaccinated = Number.parseInt(data.total_vaccinated) > 0 ? data.total_vaccinated : "N/A";
+    const itemVaccinesAvailable = data.total_vaccines_distributed - (data.total_vaccinations || 0);
 
+    let canadaHistory = {data: []};
+    try {
+        const reports = await fetch(api_url + "reports.json");
+        canadaHistory = await reports.json();
+    }
+    catch {
+        //noop
+    }
+    const weekVaccinations = canadaHistory.data.map(v => v.change_vaccinations).slice(-7);
+    const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
+    const yesterdayVaccinations = canadaHistory.data[Math.max(0, canadaHistory.data?.length - 2)]?.change_vaccinations;
+    const changeInVaccinationRate = yesterdayVaccinations > 0 ? Math.round((data.change_vaccinations - yesterdayVaccinations) / yesterdayVaccinations*100) : 0;
+    const daysToFullVaccinations = Math.max(Math.round((canadaPopulation - (data.total_vaccinations - data.total_vaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
+    const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (data.change_vaccinations-0.001) + 0.5),0);
 
+    $('#totalCasesCanada').attr("data-per-capita", casesPer100000);
+    $('#totalFatalitiesCanada').attr("data-per-capita", fatalitiesPer100000);
+    $('#totalHospitalizationsCanada').attr("data-per-capita", hospitalizationsPer100000);
+    $('#totalCriticalsCanada').attr("data-per-capita", criticalsPer100000);
+    $('#totalRecoveriesCanada').attr("data-per-capita", recoveriesPer100000);
+    $('#totalTestsCanada').attr("data-per-capita", testsPer100000);
+    $('#totalVaccinationsCanada').attr("data-per-capita", vaccinationsPer100000);
+    $('#totalVaccinationsChangeCanada').attr("data-per-capita", vaccinationsPer100000);
 
+    $('#totalCasesCanada').text(data.total_cases + (data.change_cases ? (" " + displayNewCases(data.change_cases)) : ""));
+    $('#totalFatalitiesCanada').text(data.total_fatalities + (data.change_fatalities ? (" " + displayNewCases(data.change_fatalities)) : ""));
+    $('#totalHospitalizationsCanada').text(data.total_hospitalizations + (data.change_hospitalizations ? (" " + displayNewCases(data.change_hospitalizations)) : ""));
+    $('#totalCriticalsCanada').text(data.total_criticals + (data.change_criticals ? (" " + displayNewCases(data.change_criticals)) : ""));
+    $('#totalRecoveriesCanada').text(data.total_recoveries + (data.change_recoveries ? (" " + displayNewCases(data.change_recoveries)) : ""));
+    $('#totalTestsCanada').text(data.total_tests + (data.change_tests ? (" " + displayNewCases(data.change_tests)) : ""));
 
+    $('#vaccinationsProvinceTableFooter').append(
+        `<tr>` +
+        `<td>Canada</td>` +
+        `<td>${formatNumber(itemVaccinesAvailable)}</td>` +
+        `<td class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</td>` +
+        `<td data-rate="${changeInVaccinationRate}">${formatNumber(data.change_vaccinations)}</td>` +
+        `<td class="dose total" data-per-capita="${vaccinationsPer100000}" data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(data.total_vaccinations)}<br>Today: ${format(data.change_vaccinations)}<br>Yesterday: 24,346">${formatNumber(data.total_vaccinations)}</td>` +
+        `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(data.total_vaccinations - (data.total_vaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
+        // `<td><progress max="100" value="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}"></progress></td>` +
+        `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
+        `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
+        // `<td><progress class="infection" max="10" value="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}"></progress></td>` +
+        `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${casesPerCapita/10*100}%"></span></div></td>` +
+        // `<td><progress class="death" max="4" value="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}"></progress></td>` +
+        `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${deathsPerCase/4*100 || 0}%"></span></div></td>` +
+        `</tr>`
+    );
 
-        // update header
-        $(".summary-header-cases > h1").text(data.total_cases + " cases");
-        $(".summary-header-cases > b").text(displayNewCases(data.change_cases));
-        $(".summary-header-deaths > h1").text(data.total_fatalities + " deaths");
-        $(".summary-header-deaths > b").text(displayNewCases(data.change_fatalities));
-        $(".summary-header-hospitalized > h1").text(data.total_hospitalizations + " hospitalized");
-        $(".summary-header-hospitalized > b").text(displayNewCases(data.change_hospitalizations));
-        $(".summary-header-recoveries > h1").text(data.total_recoveries + " recoveries");
-        $(".summary-header-recoveries > b").text(displayNewCases(data.change_recoveries));
-        $(".summary-header-percentVaccinated > h1").text((((data.total_vaccinations - data.total_vaccinated) / 38008005)*100).toFixed(3) + "%");
-        $(".summary-header-percentVaccinated > b").text("of the Canadian population has received at least one dose");
-        $(".summary-header-vaccinations > h1").text(format(data.total_vaccinations) + " doses administered");
-        $(".summary-header-vaccinations > b").text(displayNewCases(data.change_vaccinations));
-        $(".summary-header-pplVac > h1").text(data.total_vaccinations);
-        $(".summary-header-pplVac > b").text("people have received at least one dose");
-        $(".summary-header-vaccineDelivered > h1").text(format(data.total_vaccines_distributed) + " doses delivered");
-        $(".summary-header-vaccineDelivered > b").text((((data.total_vaccinations) / (data.total_vaccines_distributed))*100).toFixed(1) + "%" + " of doses delivered have been administered");
+    $('#totalVaccinationsChangeCanada').text(data.change_vaccinations);
+    $('#vaccinatedPerCanada').text(vaccinationsPer100000);
+    $('#infectedPerCanada').text(casesPer100000);
 
-        // update province table footer
-        var canadaPopulation = 38008005;
-        var casesPer100000 = Math.floor(((100000 * data.total_cases) / canadaPopulation) * 100) / 100;
-        var fatalitiesPer100000 = Math.floor(((100000 * data.total_fatalities) / canadaPopulation) * 100) / 100;
-        var hospitalizationsPer100000 = Math.floor(((100000 * data.total_hospitalizations) / canadaPopulation) * 100) / 100;
-        var criticalsPer100000 = Math.floor(((100000 * data.total_criticals) / canadaPopulation) * 100) / 100;
-        var recoveriesPer100000 = Math.floor(((100000 * data.total_recoveries) / canadaPopulation) * 100) / 100;
-        var testsPer100000 = Math.floor(((100000 * data.total_tests) / canadaPopulation) * 100) / 100;
-        var vaccinationsPer100000 = Math.floor(((100000 * data.total_vaccinations) / canadaPopulation) * 100) / 100;
-
-        const vaccinationsPerCapita = Math.round(((data.total_vaccinations - data.total_vaccinated || 0)/ canadaPopulation) * 1000) / 10;
-        const casesPerCapita = Math.round((data.total_cases / canadaPopulation) * 1000) / 10;
-        const deathsPerCase = Math.round((data.total_fatalities / data.total_cases) * 1000) / 10;
-        const vaccinationsCompletePerCapita = Number.parseInt(data.total_vaccinated) > 0 ? Math.round((data.total_vaccinated / canadaPopulation) * 1000) / 10 : "N/A";
-        const vaccinationsPercent = Math.floor(((100 * data.total_vaccinations) / data.total_vaccines_distributed) * 100) / 100;
-
-        const itemTotalVaccinated = Number.parseInt(data.total_vaccinated) > 0 ? data.total_vaccinated : "N/A";
-        const itemVaccinesAvailable = data.total_vaccines_distributed - (data.total_vaccinations || 0);
-
-        let canadaHistory = {data: []};
-        try {
-            const reports = await fetch(api_url + "reports?after=2020-12-10?fill_dates=true");
-            canadaHistory = await reports.json();
-        }
-        catch {
-            //noop
-        }
-        const weekVaccinations = canadaHistory.data.map(v => v.change_vaccinations).slice(-7);
-        const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
-        const yesterdayVaccinations = canadaHistory.data[Math.max(0, canadaHistory.data?.length - 2)]?.change_vaccinations;
-        const changeInVaccinationRate = yesterdayVaccinations > 0 ? Math.round((data.change_vaccinations - yesterdayVaccinations) / yesterdayVaccinations*100) : 0;
-        const daysToFullVaccinations = Math.max(Math.round((canadaPopulation - (data.total_vaccinations - data.total_vaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
-        const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (data.change_vaccinations-0.001) + 0.5),0);
-
-        $('#totalCasesCanada').attr("data-per-capita", casesPer100000);
-        $('#totalFatalitiesCanada').attr("data-per-capita", fatalitiesPer100000);
-        $('#totalHospitalizationsCanada').attr("data-per-capita", hospitalizationsPer100000);
-        $('#totalCriticalsCanada').attr("data-per-capita", criticalsPer100000);
-        $('#totalRecoveriesCanada').attr("data-per-capita", recoveriesPer100000);
-        $('#totalTestsCanada').attr("data-per-capita", testsPer100000);
-        $('#totalVaccinationsCanada').attr("data-per-capita", vaccinationsPer100000);
-        $('#totalVaccinationsChangeCanada').attr("data-per-capita", vaccinationsPer100000);
-
-        $('#totalCasesCanada').text(data.total_cases + (data.change_cases ? (" " + displayNewCases(data.change_cases)) : ""));
-        $('#totalFatalitiesCanada').text(data.total_fatalities + (data.change_fatalities ? (" " + displayNewCases(data.change_fatalities)) : ""));
-        $('#totalHospitalizationsCanada').text(data.total_hospitalizations + (data.change_hospitalizations ? (" " + displayNewCases(data.change_hospitalizations)) : ""));
-        $('#totalCriticalsCanada').text(data.total_criticals + (data.change_criticals ? (" " + displayNewCases(data.change_criticals)) : ""));
-        $('#totalRecoveriesCanada').text(data.total_recoveries + (data.change_recoveries ? (" " + displayNewCases(data.change_recoveries)) : ""));
-        $('#totalTestsCanada').text(data.total_tests + (data.change_tests ? (" " + displayNewCases(data.change_tests)) : ""));
-
-        $('#vaccinationsProvinceTableFooter').append(
-            `<tr>` +
-            `<td>Canada</td>` +
-            `<td>${formatNumber(itemVaccinesAvailable)}</td>` +
-            `<td class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</td>` +
-            `<td data-rate="${changeInVaccinationRate}">${formatNumber(data.change_vaccinations)}</td>` +
-            `<td class="dose total" data-per-capita="${vaccinationsPer100000}" data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(data.total_vaccinations)}<br>Today: ${format(data.change_vaccinations)}<br>Yesterday: 24,346">${formatNumber(data.total_vaccinations)}</td>` +
-            `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(data.total_vaccinations - (data.total_vaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
-            // `<td><progress max="100" value="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}"></progress></td>` +
-            `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
-            `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
-            // `<td><progress class="infection" max="10" value="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}"></progress></td>` +
-            `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${casesPerCapita/10*100}%"></span></div></td>` +
-            // `<td><progress class="death" max="4" value="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}"></progress></td>` +
-            `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${deathsPerCase/4*100 || 0}%"></span></div></td>` +
-            `</tr>`
-        );
-
-        $('#totalVaccinationsChangeCanada').text(data.change_vaccinations);
-        $('#vaccinatedPerCanada').text(vaccinationsPer100000);
-        $('#infectedPerCanada').text(casesPer100000);
-    });
 
     $("#perCapita").on('change', function () {
         var field = $(this).val();
@@ -262,22 +253,18 @@ $(document).ready(() => {
     });
 
     // draw map and cases by province graph and table
-    $.ajax({
-        url: api_url + "summary/split",
-        type: "GET",
-    }).then(res => {
-        drawMap(res.data);
-        barGraph(res.data, "#provinceCasesChart");
-        $.ajax({
-            url: api_url + "provinces"
-        }).then(res2 => {
-            buildProvinceTable(res.data, res2);
-        });
-    });
+    const splitRes = await fetch(api_url + "split.json");
+    const splitJson = await splitRes.json();
+    drawMap(splitJson.data);
+    barGraph(splitJson.data, "#provinceCasesChart");
+
+    const provRes = await fetch(api_url + "provinces.json");
+    const provJson = await provRes.json();
+    buildProvinceTable(splitJson.data, provJson);
 
     // draw new and cumulative cases graphs
     $.ajax({
-        url: api_url + "reports?after=2020-12-10?fill_dates=true",
+        url: api_url + "reports.json",
         type: "GET",
     }).then(res => {
         fillNulls(res.data);
@@ -288,9 +275,10 @@ $(document).ready(() => {
 
     // draw latest cases table
     $.ajax({
-        url: api_url + "cases",
+        url: api_url + "cases.json",
         type: "GET",
-    }).then(res => {
+    }).then(res =>
+    {
 
         var data = res.data;
 
@@ -333,7 +321,7 @@ $(document).ready(() => {
 
     // get notice
     $.ajax({
-        url: "https://devapi.covid19tracker.ca/" + "notes/tag/vac",
+        url: api_url + "vac.json",
         type: "GET",
     }).then(res => {
         var data = res;
@@ -417,7 +405,7 @@ async function buildProvinceTable(data, provinceData) {
 
         let provinceHistory = {data: []};
         try {
-            const data = await fetch(api_url + "reports/province/" + item.province + "?after=2020-12-10?fill_dates=true");
+            const data = await fetch(api_url + item.province + ".json");
             provinceHistory = await data.json();
         }
         catch {
