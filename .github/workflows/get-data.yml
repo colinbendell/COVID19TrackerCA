@@ -3,7 +3,7 @@ name: synchronize data from api.covid19tracker.ca
 on:
   workflow_dispatch:
     branches:
-      - main
+      - optimizations
   schedule:
   - cron: "1 * * * *"
 
