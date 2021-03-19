@@ -53,3 +53,4 @@ curl -s https://api.covid19tracker.ca/cases -o data/cases.json
 curl -s https://api.covid19tracker.ca/reports\?after\=2020-12-10\?fill_dates\=true -o data/reports.json
 curl -s https://covid19tracker.ca/assets/data/provinces.json -o data/provinces-map.json
 curl -s https://api.covid19tracker.ca/notes/tag/vac -o data/vac.json
+curl -s https://api.covid19tracker.ca/notes -o data/notes.json
