@@ -10647,17 +10647,18 @@ td[data-rate]:empty::after {
 /*  background-position: 50% 100%;*/
 /*  background-repeat: no-repeat;*/
 /*}*/
+
+.supply.zero:not(:empty)::before {
+  content: " (~";
+}
+
 .supply.zero:not(:empty)::after{
-  content: " days";
+  content: " days)";
   white-space: nowrap;
 }
 .supply.complete:not(:empty)::after{
   content: " weeks";
   white-space: nowrap;
-}
-
-.supply.zero:not(:empty)::before {
-  content: "~";
 }
 
 .supply.good {
@@ -10670,4 +10671,88 @@ td[data-rate]:empty::after {
 
 .supply.bad {
   color: var(--red);
+}
+
+.supply.available:empty::after {
+  content: "N/A";
+  font-weight: lighter;
+}
+
+.supply.available:empty + .supply.zero:empty, .dose.total:empty{
+  border-left: hidden;
+}
+
+.dose.total:empty + .dose.one::after {
+  content: "";
+}
+.dose.today:empty::after {
+  content: "N/A";
+  font-weight: lighter;
+}
+
+.dose.total:empty::after {
+  content: "";
+}
+
+.dose.total:empty + .dose.one * {
+  display: none;
+}
+
+.dose.total:empty + .dose.one + .dose.full {
+  border-right: hidden;
+}
+
+.dose.total:empty + .dose.one + .dose.full *  {
+  display: none;
+}
+
+input.province.row {
+  display: none;
+}
+
+label {
+  color: #09c;
+  cursor: pointer;
+}
+
+tr input:checked ~ tr {
+  background-color: green;
+}
+
+input:checked + tr {
+  color: red;
+}
+
+tr.healthregion {
+  display: none
+}
+
+tr.healthregion.visible {
+  display: table-row
+}
+tr.vaccine:first-child {
+  word-wrap: break-word;
+}
+tr.vaccine.province td button {
+  border: none;
+  background-color: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+tr.vaccine.province button {
+  margin: 0 0.5rem 0 0;
+  padding: 0;
+}
+
+tr.vaccine.province button::before {
+  content: "➕";
+  border: solid 1px var(--gray);
+}
+
+tr.vaccine.province.visible button::before {
+  content: "➖";
+}
+
+tr.vaccine.healthregion td:first-child {
+  white-space: break-spaces !important;
 }

@@ -55,10 +55,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const vaccinations = data.total_vaccinations;
     const peopleVaccinated = data.total_vaccinations - data.total_vaccinated;
-    const twoDoses = data.total_vaccinated;
-    const percentVaccinated = Math.floor((data.total_vaccinations - data.total_vaccinated) / canadaPopulation * 100) / 100;
     const vaccinationsChange = data.change_vaccinations;
-    const vaccinesDistributed = data.total_vaccines_distributed;
 
     // update timestamp
     $("#updateTime").text("As of " + moment(res.last_updated).format("dddd [at] h:mm a [CST, ]"));
@@ -96,30 +93,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     const testsPer100000 = Math.floor(((100000 * data.total_tests) / canadaPopulation) * 100) / 100;
     const vaccinationsPer100000 = Math.floor(((100000 * data.total_vaccinations) / canadaPopulation) * 100) / 100;
 
-    const vaccinationsPerCapita = Math.round(((data.total_vaccinations - data.total_vaccinated || 0)/ canadaPopulation) * 1000) / 10;
-    const casesPerCapita = Math.round((data.total_cases / canadaPopulation) * 1000) / 10;
-    const deathsPerCase = Math.round((data.total_fatalities / data.total_cases) * 1000) / 10;
-    const vaccinationsCompletePerCapita = Number.parseInt(data.total_vaccinated) > 0 ? Math.round((data.total_vaccinated / canadaPopulation) * 1000) / 10 : "N/A";
-    const vaccinationsPercent = Math.floor(((100 * data.total_vaccinations) / data.total_vaccines_distributed) * 100) / 100;
-
-    const itemTotalVaccinated = Number.parseInt(data.total_vaccinated) > 0 ? data.total_vaccinated : "N/A";
-    const itemVaccinesAvailable = data.total_vaccines_distributed - (data.total_vaccinations || 0);
-
-    let canadaHistory = {data: []};
-    try {
-        const reports = await fetch(api_url + "reports.json");
-        canadaHistory = await reports.json();
-    }
-    catch {
-        //noop
-    }
-    const weekVaccinations = canadaHistory.data.map(v => v.change_vaccinations).slice(-7);
-    const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
-    const yesterdayVaccinations = canadaHistory.data[Math.max(0, canadaHistory.data?.length - 2)]?.change_vaccinations;
-    const changeInVaccinationRate = yesterdayVaccinations > 0 ? Math.round((data.change_vaccinations - yesterdayVaccinations) / yesterdayVaccinations*100) : 0;
-    const daysToFullVaccinations = Math.max(Math.round((canadaPopulation - (data.total_vaccinations - data.total_vaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
-    const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (data.change_vaccinations-0.001) + 0.5),0);
-
     $('#totalCasesCanada').attr("data-per-capita", casesPer100000);
     $('#totalFatalitiesCanada').attr("data-per-capita", fatalitiesPer100000);
     $('#totalHospitalizationsCanada').attr("data-per-capita", hospitalizationsPer100000);
@@ -136,23 +109,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     $('#totalRecoveriesCanada').text(data.total_recoveries + (data.change_recoveries ? (" " + displayNewCases(data.change_recoveries)) : ""));
     $('#totalTestsCanada').text(data.total_tests + (data.change_tests ? (" " + displayNewCases(data.change_tests)) : ""));
 
-    $('#vaccinationsProvinceTableFooter').append(
-        `<tr>` +
-        `<td>Canada</td>` +
-        `<td>${formatNumber(itemVaccinesAvailable)}</td>` +
-        `<td class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</td>` +
-        `<td data-rate="${changeInVaccinationRate}">${formatNumber(data.change_vaccinations)}</td>` +
-        `<td class="dose total" data-per-capita="${vaccinationsPer100000}" data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(data.total_vaccinations)}<br>Today: ${format(data.change_vaccinations)}<br>Yesterday: 24,346">${formatNumber(data.total_vaccinations)}</td>` +
-        `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(data.total_vaccinations - (data.total_vaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
-        // `<td><progress max="100" value="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}"></progress></td>` +
-        `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(data.total_vaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
-        `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
-        // `<td><progress class="infection" max="10" value="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}"></progress></td>` +
-        `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(data.total_cases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${casesPerCapita/10*100}%"></span></div></td>` +
-        // `<td><progress class="death" max="4" value="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}"></progress></td>` +
-        `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(data.total_fatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${deathsPerCase/4*100 || 0}%"></span></div></td>` +
-        `</tr>`
-    );
+    // append data to row
+    const d = { code: "CA", name: "Canada", population: canadaPopulation, total: data, daily: []}
+    try {
+        const res = await fetch(api_url + "reports.json");
+        const resData = await res.json();
+        d.daily = resData.data;
+    }
+    catch {
+        //noop
+    }
+    $('#vaccinationsProvinceTableFooter').append(formatVaccineTable(d))
 
     $('#totalVaccinationsChangeCanada').text(data.change_vaccinations);
     $('#vaccinatedPerCanada').text(vaccinationsPer100000);
@@ -258,9 +225,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     drawMap(splitJson.data);
     barGraph(splitJson.data, "#provinceCasesChart");
 
-    const provRes = await fetch(api_url + "provinces.json");
-    const provJson = await provRes.json();
-    buildProvinceTable(splitJson.data, provJson);
+    // const provRes = await fetch(api_url + "provinces.json");
+    // const provJson = await provRes.json();
+    // buildProvinceTable(splitJson.data, provJson);
+
+    const fullDataRes = await fetch('https://colinbendell.github.io/covid19data.ca/data.json');
+    const fullDataJson = await fullDataRes.json();
+    const provData = Object.keys(fullDataJson).map(k => Object.assign(fullDataJson[k], {code: k}));
+    await buildProvinceTable(provData.filter(v => v.code !== 'CA'));
 
     // draw new and cumulative cases graphs
     $.ajax({
@@ -351,100 +323,105 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
+function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", population: 0, total: { total_cases: 0, total_fatalities: 0, total_vaccinations: 0, total_vaccinated: 0, total_vaccines_distributed: 0, change_vaccinations: 0}, daily:[]}) {
+
+    const changeVaccinations = data.total.change_vaccinations;
+    const totalVaccinations = data.total.total_vaccinations || 0;
+    const totalVaccinated = data.total.total_vaccinated;
+    const totalCases = data.total.total_cases;
+    const totalFatalities = data.total.total_fatalities;
+    const population = data.population;
+
+    const vaccinationsPer100000 = Math.floor(((100000 * totalVaccinations) / data.population) * 100) / 100;
+    const vaccinationsPerCapita = Math.round(((totalVaccinations - (totalVaccinated || 0))/ data.population) * 1000) / 10;
+    const casesPerCapita = Math.round((totalCases / data.population) * 1000) / 10;
+    const deathsPerCase = Math.round((totalFatalities / totalCases) * 1000) / 10;
+    const vaccinationsCompletePerCapita = Number.parseInt(totalVaccinated) > 0 ? Math.round((totalVaccinated / data.population) * 1000) / 10 : "N/A";
+    const vaccinationsPercent = Math.floor(((100 * totalVaccinations) / data.total.total_vaccines_distributed) * 100) / 100;
+
+    const updatedAt = data.updated_at ? (new Date(data.updated_at)).toLocaleString(): "N/A";
+
+    const provinceStatus = data.data_status || "Unknown";
+    const itemTotalVaccinated = Number.parseInt(totalVaccinated) > 0 ? totalVaccinated : "N/A";
+    const itemVaccinesAvailable = data.total.total_vaccines_distributed - (totalVaccinations || 0);
+
+    const weekVaccinations = data.daily.map(v => v.change_vaccinations).slice(-7);
+    const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
+    const yesterdayVaccinations = data.daily[Math.max(0, data.daily?.length - 2)]?.change_vaccinations;
+    const changeInVaccinationRate = changeVaccinations > 0 && yesterdayVaccinations > 0 ? Math.round((changeVaccinations - weekVaccinationsAvg) / weekVaccinationsAvg*100) : 0;
+    const daysToFullVaccinations = Math.max(Math.round((data.population - (totalVaccinations - totalVaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
+    const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (weekVaccinationsAvg-0.001) + 0.5),0);
+
+    let htmlName = data.name?.en || data.name;
+    if (data.data_status) {
+        htmlName = `<button onclick="toggleHealthRegions('${data.code}')"></button>` +
+            `<span class='province-update-status status-${provinceStatus.toLowerCase().replace(/\s/gi, '-')}' data-toggle='tooltip' data-placement='bottom' data-html='true' title='` +
+            `Status: <b>${provinceStatus}</b><br>` +
+            `Last updated: <b>${updatedAt}</b><br>` +
+            `Update expected by: <b>${expectedTime(data.code)}</b>'>` +
+            "</span>" +
+            `<span><a style='color:black;' href='provincevac.html?p=${data.code}'><span>${data.name?.en || data.name}</span></a> </span>`;
+    }
+
+    return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(totalVaccinations)}<br>Today: ${format(changeVaccinations)}<br>Yesterday: ${format(yesterdayVaccinations)}<br>Population: ${format(population)}">` +
+    `<td>${htmlName}</td>` +
+    `<td class='supply available'>${formatNumber(itemVaccinesAvailable)}` +
+    `<span class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</span></td>` +
+    `<td class="dose today" data-rate="${changeInVaccinationRate}">${formatNumber(changeVaccinations || weekVaccinationsAvg) || ''}</td>` +
+    `<td class="dose total" >${formatNumber(totalVaccinations) || ''}</td>` +
+    `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(totalVaccinations - (totalVaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
+    `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(totalVaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
+    `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
+    `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(totalCases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(casesPerCapita/10*100, 100)}%"></span></div></td>` +
+    `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(totalFatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(deathsPerCase/4*100 || 0, 100)}%"></span></div></td>` +
+    `</tr>`;
+}
 async function buildProvinceTable(data, provinceData) {
     const html = [];
-    for (const item of data.sort((a,b) => b.total_vaccinations - a.total_vaccinations)) {
+    for (const item of data.sort((a,b) => b.total.total_vaccinations - a.total.total_vaccinations)) {
         item.source = provinceSources[item.province] || "https://covid19tracker.ca/sources.html";
-        var casesPer100000 = Math.floor(((100000 * item.total_cases) / provinceProperties(item.province).population) * 100) / 100;
-        var fatalitiesPer100000 = Math.floor(((100000 * item.total_fatalities) / provinceProperties(item.province).population) * 100) / 100;
-        var hospitalizationsPer100000 = Math.floor(((100000 * item.total_hospitalizations) / provinceProperties(item.province).population) * 100) / 100;
-        var criticalsPer100000 = Math.floor(((100000 * item.total_criticals) / provinceProperties(item.province).population) * 100) / 100;
-        var recoveriesPer100000 = Math.floor(((100000 * item.total_recoveries) / provinceProperties(item.province).population) * 100) / 100;
-        var testsPer100000 = Math.floor(((100000 * item.total_tests) / provinceProperties(item.province).population) * 100) / 100;
-        var vaccinationsPer100000 = Math.floor(((100000 * item.total_vaccinations) / provinceProperties(item.province).population) * 100) / 100;
-        const vaccinationsPerCapita = Math.round(((item.total_vaccinations - item.total_vaccinated || 0)/ provinceProperties(item.province).population) * 1000) / 10;
-        const casesPerCapita = Math.round((item.total_cases / provinceProperties(item.province).population) * 1000) / 10;
-        const deathsPerCase = Math.round((item.total_fatalities / item.total_cases) * 1000) / 10;
-        const vaccinationsCompletePerCapita = Number.parseInt(item.total_vaccinated) > 0 ? Math.round((item.total_vaccinated / provinceProperties(item.province).population) * 1000) / 10 : "N/A";
-        const vaccinationsPercent = Math.floor(((100 * item.total_vaccinations) / item.total_vaccines_distributed) * 100) / 100;
 
-
-        var thisProvinceData = provinceData.filter(province => province.code === item.province);
-        thisProvinceData = thisProvinceData.length ? thisProvinceData[0] : {};
-
-        var updatedAt = thisProvinceData.updated_at ? moment(thisProvinceData.updated_at).format("dddd, MMMM Do YYYY, HH:mm") + " CST": "N/A";
-        var provinceStatus = thisProvinceData.data_status || "Unknown";
-
-        // append data to row
-        $('#totalCasesProvinceTable').append(
-            "<tr class='provinceRow'>" +
-            "<td>" +
-            "<span class='province-update-status status-" + provinceStatus.toLowerCase().replace(/\s/gi, '-') + "' " +
-            " data-toggle='tooltip' data-placement='bottom' data-html='true' title='" +
-            "Status: <b>" + provinceStatus + "</b><br>" +
-            "Last updated: <b>" + updatedAt + "</b><br>" +
-            "Update expected by: <b>" + expectedTime(item.province) + "</b>" +
-            "'></span>" +
-            "<span>" + provinceProperties(item.province).name + "</span><span class='toggle-regions'><span class='arrow-down' data-toggle='0' data-province='" + item.province + "'><i class='fa fa-angle-down'></i></span></span>" +
-            "</td>" +
-            "<td data-per-capita='" + casesPer100000 + "'><b><i>" + item.total_cases + (item.change_cases ? (" " + displayNewCases(item.change_cases)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + fatalitiesPer100000 + "'><b><i>" + item.total_fatalities + (item.change_fatalities ? (" " + displayNewCases(item.change_fatalities)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + hospitalizationsPer100000 + "'><b><i>" + item.total_hospitalizations + (item.change_hospitalizations ? (" " + displayNewCases(item.change_hospitalizations)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + criticalsPer100000 + "'><b><i>" + item.total_criticals + (item.change_criticals ? (" " + displayNewCases(item.change_criticals)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + recoveriesPer100000 + "'><b><i>" + item.total_recoveries + (item.change_recoveries ? (" " + displayNewCases(item.change_recoveries)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + testsPer100000 + "'><b><i>" + item.total_tests + (item.change_tests ? (" " + displayNewCases(item.change_tests)) : "") + "</i></b></td>" +
-            "<td data-per-capita='" + vaccinationsPer100000 + "'><b><i>" + item.total_vaccinations + (item.change_vaccinations ? (" " + displayNewCases(item.change_vaccinations)) : "") + "</i></b></td>" +
-            "<td>" + casesPer100000 + "</td>" +
-            "<td><a href='" + item.source + "'>Source</a></td>" +
-            "</tr>"
-        )
-
-
-        const itemTotalVaccinated = Number.parseInt(item.total_vaccinated) > 0 ? item.total_vaccinated : "N/A";
-        const itemVaccinesAvailable = item.total_vaccines_distributed - (item.total_vaccinations || 0);
-
-        let provinceHistory = {data: []};
-        try {
-            const data = await fetch(api_url + item.province + ".json");
-            provinceHistory = await data.json();
+        let d = {};
+        if (item.daily) {
+            d = item;
         }
-        catch {
-            //noop
+        else {
+            Object.assign(d, provinceData.filter(province => province.code === item.province)[0]);
+            Object.assign(d, provinceProperties(item.province), {total: item, daily: []});
+            try {
+                const res = await fetch(api_url + item.province + ".json");
+                const resData = await res.json();
+                d.daily = resData.data.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+            }
+            catch {
+                //noop
+            }
         }
 
-        const weekVaccinations = provinceHistory.data.map(v => v.change_vaccinations).slice(-7);
-        const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
-        const yesterdayVaccinations = provinceHistory.data[Math.max(0, provinceHistory.data?.length - 2)]?.change_vaccinations;
-        const changeInVaccinationRate = item.change_vaccinations > 0 && yesterdayVaccinations > 0 ? Math.round((item.change_vaccinations - yesterdayVaccinations) / yesterdayVaccinations*100) : 0;
-        const daysToFullVaccinations = Math.max(Math.round((provinceProperties(item.province).population - (item.total_vaccinations - item.total_vaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
-        const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (weekVaccinationsAvg-0.001) + 0.5),0);
-
         // append data to row
-        html.push(
-            "<tr class='provinceRow'>" +
-            "<td>" +
-            "<span class='province-update-status status-" + provinceStatus.toLowerCase().replace(/\s/gi, '-') + "' " +
-            " data-toggle='tooltip' data-placement='bottom' data-html='true' title='" +
-            "Status: <b>" + provinceStatus + "</b><br>" +
-            "Last updated: <b>" + updatedAt + "</b><br>" +
-            "Update expected by: <b>" + expectedTime(item.province) + "</b>" +
-            "'></span>" +
-            "<span>" + "<a style='color:black;' href='provincevac.html?p=" + provinceProperties(item.province).code + "'><span>" +  provinceProperties(item.province).name + "</span></a> </span>" +
-            "</td>" +
-            `<td>${formatNumber(itemVaccinesAvailable)}</td>` +
-            `<td class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</td>` +
-            `<td data-rate="${changeInVaccinationRate}">${formatNumber(item.change_vaccinations || weekVaccinationsAvg) || ''}</td>` +
-            `<td class="dose total" data-per-capita="${vaccinationsPer100000}" data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(item.total_vaccinations)}<br>Today: ${format(item.change_vaccinations)}<br>Yesterday: 24,346">${formatNumber(item.total_vaccinations)}</td>` +
-            `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(item.total_vaccinations - (item.total_vaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
-            `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(item.total_vaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
-            `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
-            `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(item.total_cases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${casesPerCapita/10*100}%"></span></div></td>` +
-            `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(item.total_fatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${deathsPerCase/4*100 || 0}%"></span></div></td>` +
-            "</tr>"
-        )
+        html.push(formatVaccineTable(d))
+        if (d.regions) {
+            for (const region of d.regions) {
+                console.log(region.total);
+                console.log(region.daily[region.daily.length - 2]);
+                if (!d.total?.change_cases) {
+                    region.daily.pop();
+                    region.total = region.daily[region.daily.length - 1];
+                }
+                console.log(region.total);
+                html.push(formatVaccineTable(region));
+            }
+        }
     }
     $('#vaccinationsProvinceTable').append(html);
     $('[data-toggle="tooltip"]').tooltip({
         template: '<div class="tooltip province-status-tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>'
     });
+}
+function toggleHealthRegions(province) {
+    console.log(province);
+    const nodes = document.getElementsByClassName(`vaccine ${province}`);
+    for (const node of nodes) {
+        node.classList.toggle("visible");
+    }
 }
