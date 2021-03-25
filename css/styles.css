@@ -10595,7 +10595,7 @@ td[data-rate]:empty::after {
   z-index: 2;
 }
 
-.progressbar[data-value]:after {
+.progressbar[data-value]:not([data-value="N/A"]):not([data-value=""])::after {
   content: attr(data-value);
   vertical-align: middle;
   position:absolute;
@@ -10604,9 +10604,10 @@ td[data-rate]:empty::after {
   color: white;
   font-size: 0.7rem;
 }
-.progressbar[data-value="0"]:after, .progress[data-value=""]:after {
+.progressbar[data-value="0"]:after {
   content: "";
 }
+
 .progressbar[aria-valuenow="N/A"]::before {
   content: attr(aria-valuenow);
   font-weight: lighter;
@@ -10624,28 +10625,32 @@ td[data-rate]:empty::after {
   background-color: var(--red);
 }
 
-.per100k .progressbar > .value {
+.per100k .progressbar > .value, .per1000k .progressbar > .value {
   background-color: var(--gray-dark);
 }
-.per100k .progressbar.green > .value {
+.per100k .progressbar.green > .value, .per1000k .progressbar.green > .value {
   background-color: var(--green);
 }
-.per100k .progressbar.yellow > .value {
+.per100k .progressbar.yellow > .value, .per1000k .progressbar.yellow > .value {
   background-color: var(--yellow);
 }
-.per100k .progressbar.orange > .value {
+.per100k .progressbar.orange > .value, .per1000k .progressbar.orange > .value {
   background-color: var(--orange);
 }
-.per100k .progressbar.red > .value {
+.per100k .progressbar.red > .value, .per1000k .progressbar.red > .value {
   background-color: var(--red);
 }
 
-.per100k .progressbar::after {
-  content: attr(data-value) ;
+.per100k .progressbar:not([data-value="N/A"])::after, .per1000k .progressbar:not([data-value="N/A"])::after {
+  content: attr(data-value);
 }
 
-.per100k .progressbar::before {
+.per100k .progressbar:not([aria-valuenow="N/A"])::before {
   content: attr(aria-valuenow) "/₁₀₀ₖ";
+}
+
+.per1000k .progressbar:not([aria-valuenow="N/A"])::before {
+  content: attr(aria-valuenow) "/₁₀₀₀ₖ";
 }
 
 
