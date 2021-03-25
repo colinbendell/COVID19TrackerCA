@@ -120,6 +120,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         //noop
     }
     $('#vaccinationsProvinceTableFooter').append(formatVaccineTable(d))
+    $('#casesProvinceTableFooter').append(formatVaccineTable(d, false))
 
     $('#totalVaccinationsChangeCanada').text(data.change_vaccinations);
     $('#vaccinatedPerCanada').text(vaccinationsPer100000);
@@ -220,10 +221,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 
     // draw map and cases by province graph and table
-    const splitRes = await fetch(api_url + "split.json");
-    const splitJson = await splitRes.json();
-    drawMap(splitJson.data);
-    barGraph(splitJson.data, "#provinceCasesChart");
+    // const splitRes = await fetch(api_url + "split.json");
+    // const splitJson = await splitRes.json();
+    // drawMap(splitJson.data);
+    // barGraph(splitJson.data, "#provinceCasesChart");
 
     // const provRes = await fetch(api_url + "provinces.json");
     // const provJson = await provRes.json();
@@ -323,20 +324,34 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", population: 0, total: { total_cases: 0, total_fatalities: 0, total_vaccinations: 0, total_vaccinated: 0, total_vaccines_distributed: 0, change_vaccinations: 0}, daily:[]}) {
+function chunkArray(myArray, chunkSize){
+    const results = [];
+
+    while (myArray.length) {
+        results.unshift(myArray.splice(-chunkSize));
+    }
+
+    return results;
+}
+
+function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", population: 0, total: { total_cases: 0, total_fatalities: 0, total_vaccinations: 0, total_vaccinated: 0, total_vaccines_distributed: 0, change_vaccinations: 0}, daily:[]}, vaccineTable = true) {
 
     const changeVaccinations = data.total.change_vaccinations;
     const totalVaccinations = data.total.total_vaccinations || 0;
-    const totalVaccinated = data.total.total_vaccinated;
+    const totalVaccinated = data.total.total_vaccinated || 0;
     const totalCases = data.total.total_cases;
     const totalFatalities = data.total.total_fatalities;
     const population = data.population;
+    const totalRecoveries = data.total.total_recoveries || 0;
+    const currentChange = data.total.change_cases;
+    const currentActive = totalCases - totalFatalities - totalRecoveries;
 
     const vaccinationsPer100000 = Math.floor(((100000 * totalVaccinations) / data.population) * 100) / 100;
     const vaccinationsPerCapita = Math.round(((totalVaccinations - (totalVaccinated || 0))/ data.population) * 1000) / 10;
     const casesPerCapita = Math.round((totalCases / data.population) * 1000) / 10;
     const deathsPerCase = Math.round((totalFatalities / totalCases) * 1000) / 10;
-    const vaccinationsCompletePerCapita = Number.parseInt(totalVaccinated) > 0 ? Math.round((totalVaccinated / data.population) * 1000) / 10 : "N/A";
+    const activePer100k = Math.round(currentActive / population * 100*1000);
+    const vaccinationsCompletePerCapita = totalVaccinated > 0 ? Math.round((totalVaccinated / data.population) * 1000) / 10 : "N/A";
     const vaccinationsPercent = Math.floor(((100 * totalVaccinations) / data.total.total_vaccines_distributed) * 100) / 100;
 
     const updatedAt = data.updated_at ? (new Date(data.updated_at)).toLocaleString(): "N/A";
@@ -345,12 +360,19 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
     const itemTotalVaccinated = Number.parseInt(totalVaccinated) > 0 ? totalVaccinated : "N/A";
     const itemVaccinesAvailable = data.total.total_vaccines_distributed - (totalVaccinations || 0);
 
-    const weekVaccinations = data.daily.map(v => v.change_vaccinations).slice(-7);
-    const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / weekVaccinations.length);
-    const yesterdayVaccinations = data.daily[Math.max(0, data.daily?.length - 2)]?.change_vaccinations;
+    const lastMonth = chunkArray(data.daily.slice(-8*7 -1, -1), 7);
+    const lastWeek = data.daily.slice(-8, -1);
+    const yesterday = lastWeek.slice(-1)[0];
+    const weekVaccinations = lastWeek.map(v => v.change_vaccinations || 0);
+    const weekVaccinationsAvg = Math.floor(weekVaccinations.reduce((c, v) => c + v) / lastWeek.length);
+    const yesterdayVaccinations = yesterday?.change_vaccinations;
     const changeInVaccinationRate = changeVaccinations > 0 && yesterdayVaccinations > 0 ? Math.round((changeVaccinations - weekVaccinationsAvg) / weekVaccinationsAvg*100) : 0;
-    const daysToFullVaccinations = Math.max(Math.round((data.population - (totalVaccinations - totalVaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0);
+    const daysToFullVaccinations = weekVaccinationsAvg > 0 ? Math.max(Math.round((data.population - (totalVaccinations - totalVaccinated || 0)) / weekVaccinationsAvg / 7 + 0.5),0) : 0;
     const daysToZeroVaccines = Math.max(Math.round(itemVaccinesAvailable / (weekVaccinationsAvg-0.001) + 0.5),0);
+    const weekActive = lastWeek.map(v => (v.total_cases || 0) - (v.total_fatalities || 0) - (v.total_recoveries || 0));
+    const weekActiveAvg = Math.floor(weekActive.reduce((c, v) => c + v) / lastWeek.length);
+    const changeInActiveRate =  Math.round((currentActive - weekActiveAvg) / (weekActiveAvg+0.001)*100);
+    const changeActive = currentActive - weekActive.slice(-1)[0];
 
     let htmlName = data.name?.en || data.name;
     if (data.data_status) {
@@ -363,21 +385,77 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
             `<span><a style='color:black;' href='provincevac.html?p=${data.code}'><span>${data.name?.en || data.name}</span></a> </span>`;
     }
 
-    return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltip" data-placement="bottom" data-html="true" title="Total: ${format(totalVaccinations)}<br>Today: ${format(changeVaccinations)}<br>Yesterday: ${format(yesterdayVaccinations)}<br>Population: ${format(population)}">` +
-    `<td>${htmlName}</td>` +
-    `<td class='supply available'>${formatNumber(itemVaccinesAvailable)}` +
-    `<span class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</span></td>` +
-    `<td class="dose today" data-rate="${changeInVaccinationRate}">${formatNumber(changeVaccinations || weekVaccinationsAvg) || ''}</td>` +
-    `<td class="dose total" >${formatNumber(totalVaccinations) || ''}</td>` +
-    `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(totalVaccinations - (totalVaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
-    `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(totalVaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
-    `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
-    `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(totalCases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(casesPerCapita/10*100, 100)}%"></span></div></td>` +
-    `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(totalFatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(deathsPerCase/4*100 || 0, 100)}%"></span></div></td>` +
-    `</tr>`;
+    if (vaccineTable) {
+        const maxDose = Math.max(...lastWeek.flat().map(d => d.change_vaccinations || 0), changeVaccinations || 0, 0);
+
+        const weeklyDoseHistory = [];
+        weeklyDoseHistory.push(`<div><table class="charts-css column"><tbody><tr>`);
+        for (const item of lastMonth.slice(0, -1)) {
+            const avgItem = Math.round(item.map(i => i.change_vaccinations).reduce((p, c) => p + c) / item.length + 0.5)
+            const doseHeight = (maxDose > 0 ? Math.round(avgItem / maxDose * 100) : 0) || 5;
+            weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">Week of ${item[0].date}: ${formatNumber(avgItem)}</span></td>`);
+        }
+        weeklyDoseHistory.push(`</tr><tr>`);
+
+        for (const item of lastWeek.slice(0)) {
+            const doseValue = item.change_vaccinations || 0;
+            const doseHeight = (maxDose > 0 ? Math.round(doseValue / maxDose * 100) : 0) || 5;
+            weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(doseValue)}</span> </td>`);
+        }
+        const doseHeight = (maxDose > 0 ? Math.round((changeVaccinations || 0) / maxDose * 100) : 0) || 5;
+        weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--blue);"><span class="tooltip">Today: ${formatNumber(changeVaccinations)}</span> </td>`);
+        weeklyDoseHistory.push(`</tr></tbody></table></div>`);
+
+        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalVaccinations)}<br>Today: ${format(changeVaccinations)}<br>Yesterday: ${format(yesterdayVaccinations)}<br>Population: ${format(population)}">` +
+            `<td>${htmlName}</td>` +
+            `<td class="dose history">${weeklyDoseHistory.join('')}</td>` +
+            `<td class="dose today" data-rate="${changeInVaccinationRate}">${formatNumber(changeVaccinations || weekVaccinationsAvg) || ''}</td>` +
+            `<td class="supply complete ${daysToFullVaccinations > 15 ? "bad" : daysToFullVaccinations > 5 ? "ok" : "good" }">${daysToFullVaccinations || ''}</td>` +
+            `<td class="dose total" >${formatNumber(totalVaccinations) || ''}</td>` +
+            `<td class="dose one"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsPerCapita}" data-value="${formatNumber(totalVaccinations - (totalVaccinated || 0))}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsPerCapita}%"></span></div></td>` +
+            `<td class="dose full"><div class="progressbar" role="progressbar" aria-valuenow="${vaccinationsCompletePerCapita}" data-value="${formatNumber(totalVaccinated)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${vaccinationsCompletePerCapita}%"></span></div></td>` +
+            `<td><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(totalCases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(casesPerCapita/10*100, 100)}%"></span></div></td>` +
+            `<td class='supply available'>${formatNumber(itemVaccinesAvailable)}` +
+            `<span class="supply zero ${daysToZeroVaccines > 10 ? "bad" : daysToZeroVaccines > 7 ? "ok" : "good"}">${daysToZeroVaccines || ''}</span></td>` +
+            // `<td><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(totalFatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(deathsPerCase/4*100 || 0, 100)}%"></span></div></td>` +
+            // `<td class="activecases today" data-rate="${changeInActiveRate}">${formatNumber(changeActive)}</td>` +
+            // `<td><div class="progressbar activecases ${activePer100k < 10 ? "green" : activePer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : activePer100k < 100 ? "red" : "black"}" aria-valuenow="${activePer100k}" data-value="${formatNumber(currentActive)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(activePer100k/(activePer100k < 10 ? 10 : activePer100k < 25 ? 25 : activePer100k < 40 ? 40 : activePer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
+            `</tr>`;
+    }
+    else {
+        const maxCases = Math.max(...lastMonth.flat().map(d => d.change_cases || 0), currentChange || 0, 1);
+
+        const weeklyCasesHistory = [];
+        weeklyCasesHistory.push(`<div><table class="charts-css column"><tbody><tr>`);
+        for (const item of lastMonth.slice(0, -1)) {
+            const avgItem = Math.round(item.map(i => i.change_cases).reduce((p, c) => p + c) / item.length + 0.5)
+            const doseHeight = (maxCases > 0 ? Math.round(avgItem / maxCases * 100) : 0) || 5;
+            weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">Week of ${item[0].date}: ${formatNumber(avgItem)}</span></td>`);
+        }
+        weeklyCasesHistory.push(`</tr><tr>`);
+
+        for (const item of lastWeek.slice(0)) {
+            const caseValue = item.change_cases || 0;
+            const doseHeight = (maxCases > 0 ? Math.round(caseValue / maxCases * 100) : 0) || 5;
+            weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(caseValue)}</span> </td>`);
+        }
+        const doseHeight = (maxCases > 0 ? Math.round((currentChange || 0) / maxCases * 100) : 0) || 5;
+        weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--red);"><span class="tooltip">Today: ${formatNumber(currentChange)}</span> </td>`);
+        weeklyCasesHistory.push(`</tr></tbody></table></div>`);
+
+        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalCases)}<br>Today: ${format(currentChange)}<br>Yesterday: ${format(yesterday.change_cases)}<br>Population: ${format(maxCases)}">` +
+            `<td>${htmlName}</td>` +
+            `<td class="cases history">${weeklyCasesHistory.join('')}</td>` +
+            `<td class="activecases today" data-rate="${changeInActiveRate}">${formatNumber(currentChange)}</td>` +
+            `<td class="activecases"><div class="progressbar ${activePer100k < 10 ? "green" : activePer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : activePer100k < 100 ? "red" : "black"}" aria-valuenow="${activePer100k}" data-value="${formatNumber(currentActive)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(activePer100k/(activePer100k < 10 ? 10 : activePer100k < 25 ? 25 : activePer100k < 40 ? 40 : activePer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
+            `<td class="infection"><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(totalCases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(casesPerCapita/10*100, 100)}%"></span></div></td>` +
+            `<td class="death"><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(totalFatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(deathsPerCase/4*100 || 0, 100)}%"></span></div></td>` +
+            `</tr>`;
+    }
 }
 async function buildProvinceTable(data, provinceData) {
-    const html = [];
+    const vaccineHtml = [];
+    const casesHtml = [];
     for (const item of data.sort((a,b) => b.total.total_vaccinations - a.total.total_vaccinations)) {
         item.source = provinceSources[item.province] || "https://covid19tracker.ca/sources.html";
 
@@ -399,27 +477,36 @@ async function buildProvinceTable(data, provinceData) {
         }
 
         // append data to row
-        html.push(formatVaccineTable(d))
-        if (d.regions) {
-            for (const region of d.regions) {
-                console.log(region.total);
-                console.log(region.daily[region.daily.length - 2]);
+        vaccineHtml.push(formatVaccineTable(d))
+        if (d.regions && d.regions.length > 1) {
+            for (const region of d.regions.filter(r => Number.isInteger(r.total?.total_vaccinations) && r.daily)) {
                 if (!d.total?.change_cases) {
                     region.daily.pop();
                     region.total = region.daily[region.daily.length - 1];
                 }
-                console.log(region.total);
-                html.push(formatVaccineTable(region));
+                vaccineHtml.push(formatVaccineTable(region));
             }
         }
+
+        casesHtml.push(formatVaccineTable(d, false))
+        if (d.regions && d.regions.length > 1) {
+            for (const region of d.regions.filter(r => Number.isInteger(r.total?.total_cases) && r.daily)) {
+                if (!d.total?.change_cases) {
+                    region.daily.pop();
+                    region.total = region.daily[region.daily.length - 1];
+                }
+                casesHtml.push(formatVaccineTable(region, false));
+            }
+        }
+
     }
-    $('#vaccinationsProvinceTable').append(html);
-    $('[data-toggle="tooltip"]').tooltip({
+    $('#vaccinationsProvinceTable').append(vaccineHtml);
+    $('#casesProvinceTable').append(casesHtml);
+    $('[data-toggle="tooltiprow"]').tooltip({
         template: '<div class="tooltip province-status-tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>'
     });
 }
 function toggleHealthRegions(province) {
-    console.log(province);
     const nodes = document.getElementsByClassName(`vaccine ${province}`);
     for (const node of nodes) {
         node.classList.toggle("visible");

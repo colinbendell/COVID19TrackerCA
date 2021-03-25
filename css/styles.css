@@ -10526,7 +10526,7 @@ div[class*="summary-header"] h1 {
   font-size: 1.65rem !important;
 }
 
-#vaccinationsProvinceTable tr td:nth-child(-n+4) {
+#vaccinationsProvinceTable > tr > td:nth-child(-n+4), #vaccinationsProvinceTable > tr > td:last-child {
   white-space: nowrap;
   font-style: italic;
 }
@@ -10536,6 +10536,18 @@ div[class*="summary-header"] h1 {
   font-style: italic;
   white-space: nowrap;
 }
+
+#casesProvinceTable > tr > td:nth-child(-n+4), #vaccinationsProvinceTable > tr > td:last-child {
+  white-space: nowrap;
+  font-style: italic;
+}
+
+#casesProvinceTableFooter tr td {
+  font-weight: bold;
+  font-style: italic;
+  white-space: nowrap;
+}
+
 td[data-rate]::after {
   color: var(--blue);
   content: " (▲" attr(data-rate) "%)"
@@ -10611,6 +10623,31 @@ td[data-rate]:empty::after {
 .progressbar.death > .value {
   background-color: var(--red);
 }
+
+.progressbar.activecases > .value {
+  background-color: var(--gray-dark);
+}
+.progressbar.activecases.green > .value {
+  background-color: var(--green);
+}
+.progressbar.activecases.yellow > .value {
+  background-color: var(--yellow);
+}
+.progressbar.activecases.orange > .value {
+  background-color: var(--orange);
+}
+.progressbar.activecases.red > .value {
+  background-color: var(--red);
+}
+
+.progressbar.activecases::after {
+  content: attr(data-value) ;
+}
+
+.progressbar.activecases::before {
+  content: attr(aria-valuenow) "/₁₀₀ₖ";
+}
+
 
 .dose.one, .dose.total {
   border-right: hidden;
@@ -10733,6 +10770,9 @@ tr.healthregion.visible {
 tr.vaccine:first-child {
   word-wrap: break-word;
 }
+tr.vaccine.province td button:focus {
+  outline: 0;
+}
 tr.vaccine.province td button {
   border: none;
   background-color: inherit;
@@ -10755,4 +10795,71 @@ tr.vaccine.province.visible button::before {
 
 tr.vaccine.healthregion td:first-child {
   white-space: break-spaces !important;
+}
+
+.table thead tr:first-child th:empty {
+  border-bottom: 0;
+}
+
+
+.table thead tr th {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+thead tr:last-child th:not(last-child)::after {
+  color: #D0E0EA;
+  content: '|';
+  float: right;
+  margin-right: -1rem;
+  vertical-align: middle;
+}
+
+thead tr:last-child th + th:empty::after {
+  content: '';
+}
+
+thead tr th {
+  width: 28px;
+  text-align: center !important;
+}
+
+.dose.history div {
+  height: 1.5rem;  width: 7rem;  margin: 0 auto;
+}
+.dose.history table.column {
+  --color-1: rgba(0, 123, 255, 0.2);
+  --color-2: rgba(0, 123, 255, 0.4);
+}
+
+.dose.history table.column td {
+  margin-inline-start: 1px;
+}
+
+.dose.history .tooltip {
+  bottom: 150%;
+}
+
+.cases.history div {
+  height: 1.5rem;  width: 7rem;  margin: 0 auto;
+}
+.cases.history table.column {
+  --color-1: rgba(220, 53, 69, 0.2);
+  --color-2: rgba(220, 53, 69, 0.4);
+}
+
+.cases.history table.column td {
+  margin-inline-start: 1px;
+}
+
+.cases.history .tooltip {
+  bottom: 150%;
+}
+
+td[data-rate].activecases::after {
+  color: var(--red);
+}
+td[data-rate ^= "-"].activecases::after {
+  color: var(--blue);
 }
