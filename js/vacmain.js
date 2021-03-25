@@ -343,16 +343,20 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
     const totalFatalities = data.total.total_fatalities;
     const population = data.population;
     const totalRecoveries = data.total.total_recoveries || 0;
-    const currentChange = data.total.change_cases;
+    const currentChangeCases = data.total.change_cases;
+    const currentChangeTests = data.total.change_tests || 0;
     const currentActive = totalCases - totalFatalities - totalRecoveries;
+    const currentHospitalized = data.total.total_hospitalizations || 0;
 
     const vaccinationsPer100000 = Math.floor(((100000 * totalVaccinations) / data.population) * 100) / 100;
     const vaccinationsPerCapita = Math.round(((totalVaccinations - (totalVaccinated || 0))/ data.population) * 1000) / 10;
     const casesPerCapita = Math.round((totalCases / data.population) * 1000) / 10;
     const deathsPerCase = Math.round((totalFatalities / totalCases) * 1000) / 10;
     const activePer100k = Math.round(currentActive / population * 100*1000);
+    const hospitalizedPer100k = Math.round(currentHospitalized / population * 1000*1000);
     const vaccinationsCompletePerCapita = totalVaccinated > 0 ? Math.round((totalVaccinated / data.population) * 1000) / 10 : "N/A";
     const vaccinationsPercent = Math.floor(((100 * totalVaccinations) / data.total.total_vaccines_distributed) * 100) / 100;
+    const currentPositivityRate = Math.round(currentChangeCases / currentChangeTests * 1000) / 10;
 
     const updatedAt = data.updated_at ? (new Date(data.updated_at)).toLocaleString(): "N/A";
 
@@ -423,7 +427,7 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
             `</tr>`;
     }
     else {
-        const maxCases = Math.max(...lastMonth.flat().map(d => d.change_cases || 0), currentChange || 0, 1);
+        const maxCases = Math.max(...lastMonth.flat().map(d => d.change_cases || 0), currentChangeCases || 0, 1);
 
         const weeklyCasesHistory = [];
         weeklyCasesHistory.push(`<div><table class="charts-css column"><tbody><tr>`);
@@ -439,15 +443,17 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
             const doseHeight = (maxCases > 0 ? Math.round(caseValue / maxCases * 100) : 0) || 5;
             weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(caseValue)}</span> </td>`);
         }
-        const doseHeight = (maxCases > 0 ? Math.round((currentChange || 0) / maxCases * 100) : 0) || 5;
-        weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--red);"><span class="tooltip">Today: ${formatNumber(currentChange)}</span> </td>`);
+        const doseHeight = (maxCases > 0 ? Math.round((currentChangeCases || 0) / maxCases * 100) : 0) || 5;
+        weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--red);"><span class="tooltip">Today: ${formatNumber(currentChangeCases)}</span> </td>`);
         weeklyCasesHistory.push(`</tr></tbody></table></div>`);
 
-        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalCases)}<br>Today: ${format(currentChange)}<br>Yesterday: ${format(yesterday.change_cases)}<br>Population: ${format(maxCases)}">` +
+        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalCases)}<br>Today: ${format(currentChangeCases)}<br>Yesterday: ${format(yesterday.change_cases)}<br>Population: ${format(maxCases)}">` +
             `<td>${htmlName}</td>` +
             `<td class="cases history">${weeklyCasesHistory.join('')}</td>` +
-            `<td class="activecases today" data-rate="${changeInActiveRate}">${formatNumber(currentChange)}</td>` +
-            `<td class="activecases"><div class="progressbar ${activePer100k < 10 ? "green" : activePer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : activePer100k < 100 ? "red" : "black"}" aria-valuenow="${activePer100k}" data-value="${formatNumber(currentActive)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(activePer100k/(activePer100k < 10 ? 10 : activePer100k < 25 ? 25 : activePer100k < 40 ? 40 : activePer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
+            `<td class="activecases today" data-rate="${changeInActiveRate}">${formatNumber(currentChangeCases)}</td>` +
+            `<td class="activecases per100k"><div class="progressbar ${activePer100k < 10 ? "green" : activePer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : activePer100k < 100 ? "red" : "black"}" aria-valuenow="${activePer100k}" data-value="${formatNumber(currentActive)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(activePer100k/(activePer100k < 10 ? 10 : activePer100k < 25 ? 25 : activePer100k < 40 ? 40 : activePer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
+            `<td class="hospitalized per100k"><div class="progressbar ${hospitalizedPer100k < 10 ? "green" : hospitalizedPer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : hospitalizedPer100k < 100 ? "red" : "black"}" aria-valuenow="${hospitalizedPer100k}" data-value="${formatNumber(currentHospitalized)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(hospitalizedPer100k/(hospitalizedPer100k < 10 ? 10 : hospitalizedPer100k < 25 ? 25 : hospitalizedPer100k < 40 ? 40 : hospitalizedPer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
+            `<td class="positivity"><div class="progressbar" role="progressbar" aria-valuenow="${currentPositivityRate}" data-value="${formatNumber(currentChangeTests)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(currentPositivityRate/10*100, 100)}%"></span></div></td>` +
             `<td class="infection"><div class="progressbar infection" role="progressbar" aria-valuenow="${casesPerCapita}" data-value="${formatNumber(totalCases)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(casesPerCapita/10*100, 100)}%"></span></div></td>` +
             `<td class="death"><div class="progressbar death" role="progressbar" aria-valuenow="${deathsPerCase}" data-value="${formatNumber(totalFatalities)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(deathsPerCase/4*100 || 0, 100)}%"></span></div></td>` +
             `</tr>`;

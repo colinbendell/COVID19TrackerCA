@@ -83,50 +83,6 @@
             <br>
             <h1><i class="fab fa-canadian-maple-leaf"></i> COVID-19 Vaccination Tracker</h1>
             <br>
-            <div class="row">
-                <div class="col-md">
-                    <div class="card bg-dark text-white mb-4">
-                        <div class="card-body summary-header-vaccinations"><h1></h1> <b></b>
-                            <div class="material-switch pull-right">
-                                <div class="switch-label d-inline-block">People <span data-toggle='tooltip'
-                                                                                      title='Two doses are required to vaccinate an individual; this value indicates the approximate number of people who have received at least one dose.'><i
-                                        class="far fa-question-circle"></i></span></div>
-                                <div class="d-inline-block">
-                                    <input id="criticalCases" name="criticalCases" type="checkbox"/>
-                                    <label for="criticalCases" class="label-success"></label>
-                                </div>
-                            </div>
-                            <div class="summary-arrow" data-field="vaccinations">
-                                <span class="arrow-down">
-                                    <i class="fa fa-angle-down"></i>
-                                </span>
-                            </div>
-
-                            <div class="summary-dropdown-container"></div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-md">
-                    <div class="card bg-secondary text-white mb-4">
-                        <div class="card-body summary-header-vaccineDelivered"><h1></h1><b></b> <span
-                                data-toggle='tooltip'
-                                title='Percentage of doses distributed to the provinces that have been reported as administered'><i
-                                class="far fa-question-circle"></i></span></div>
-                    </div>
-                </div>
-
-
-                <div class="col-md">
-                    <div class="card bg-secondary text-white mb-4">
-                        <div class="card-body summary-header-percentVaccinated"><h1></h1> <b></b></div>
-                    </div>
-                </div>
-
-
-            </div>
-
 
             <div class="table-responsive">
                 <table class="table table-hover" width="100%" cellspacing="0">
@@ -162,7 +118,7 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th colspan="3">Infections</th>
+                            <th colspan="5">Infections</th>
                             <th></th>
                             <th></th>
                         </tr>
@@ -171,6 +127,8 @@
                             <th>Last 60 days</th>
                             <th>Today</th>
                             <th>Active/₁₀₀ₖ</th>
+                            <th>Hospital/₁₀₀ₖ</th>
+                            <th>Positivity Rate (Infected / Tests)</th>
                             <th>% Population ever infected</th>
                             <th>Death Rate (of Infected)</th>
                         </tr>
