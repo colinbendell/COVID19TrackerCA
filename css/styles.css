@@ -10624,27 +10624,27 @@ td[data-rate]:empty::after {
   background-color: var(--red);
 }
 
-.progressbar.activecases > .value {
+.per100k .progressbar > .value {
   background-color: var(--gray-dark);
 }
-.progressbar.activecases.green > .value {
+.per100k .progressbar.green > .value {
   background-color: var(--green);
 }
-.progressbar.activecases.yellow > .value {
+.per100k .progressbar.yellow > .value {
   background-color: var(--yellow);
 }
-.progressbar.activecases.orange > .value {
+.per100k .progressbar.orange > .value {
   background-color: var(--orange);
 }
-.progressbar.activecases.red > .value {
+.per100k .progressbar.red > .value {
   background-color: var(--red);
 }
 
-.progressbar.activecases::after {
+.per100k .progressbar::after {
   content: attr(data-value) ;
 }
 
-.progressbar.activecases::before {
+.per100k .progressbar::before {
   content: attr(aria-valuenow) "/₁₀₀ₖ";
 }
 
@@ -10830,7 +10830,7 @@ thead tr th {
 }
 .dose.history table.column {
   --color-1: rgba(0, 123, 255, 0.2);
-  --color-2: rgba(0, 123, 255, 0.4);
+  --color-2: rgba(0, 123, 255, 0.6);
 }
 
 .dose.history table.column td {
@@ -10846,7 +10846,7 @@ thead tr th {
 }
 .cases.history table.column {
   --color-1: rgba(220, 53, 69, 0.2);
-  --color-2: rgba(220, 53, 69, 0.4);
+  --color-2: rgba(220, 53, 69, 0.6);
 }
 
 .cases.history table.column td {
