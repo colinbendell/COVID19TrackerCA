@@ -407,7 +407,7 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
             weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(doseValue)}</span> </td>`);
         }
         const doseHeight = (maxDose > 0 ? Math.round((changeVaccinations || 0) / maxDose * 100) : 0) || 5;
-        weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--blue);"><span class="tooltip">Today: ${formatNumber(changeVaccinations)}</span> </td>`);
+        weeklyDoseHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">Today: ${formatNumber(changeVaccinations)}</span> </td>`);
         weeklyDoseHistory.push(`</tr></tbody></table></div>`);
 
         return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalVaccinations)}<br>Today: ${format(changeVaccinations)}<br>Yesterday: ${format(yesterdayVaccinations)}<br>Population: ${format(population)}">` +
@@ -427,30 +427,45 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
             `</tr>`;
     }
     else {
-        const maxCases = Math.max(...lastMonth.flat().map(d => d.change_cases || 0), currentChangeCases || 0, 1);
+        const caseMax = Math.max(...lastMonth.flat().map(d => d.change_cases || 0), currentChangeCases || 0, 1);
+        const activeMax = Math.max(...lastMonth.flat().map(v => (v.total_cases || 0) - (v.total_fatalities || 0) - (v.total_recoveries || 0)), currentActive || 0, 1);
 
         const weeklyCasesHistory = [];
+        const weeklyActiveHistory = [];
         weeklyCasesHistory.push(`<div><table class="charts-css column"><tbody><tr>`);
+        weeklyActiveHistory.push(`<div><table class="charts-css column"><tbody><tr>`);
         for (const item of lastMonth.slice(0, -1)) {
-            const avgItem = Math.round(item.map(i => i.change_cases).reduce((p, c) => p + c) / item.length + 0.5)
-            const doseHeight = (maxCases > 0 ? Math.round(avgItem / maxCases * 100) : 0) || 5;
-            weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">Week of ${item[0].date}: ${formatNumber(avgItem)}</span></td>`);
+            const caseAvg = Math.round(item.map(i => i.change_cases).reduce((p, c) => p + c) / item.length + 0.5);
+            const activeAvg = Math.round(item.map(v => (v.total_cases || 0) - (v.total_fatalities || 0) - (v.total_recoveries || 0)).reduce((p, c) => p + c) / item.length + 0.5);
+            const caseHeight = (caseMax > 0 ? Math.round(caseAvg / caseMax * 100) : 0) || 5;
+            const activeHeight = (activeMax > 0 ? Math.round(activeAvg / activeMax * 100) : 0) || 5;
+            weeklyCasesHistory.push(`<td style="--size:calc(${caseHeight}/100);"><span class="tooltip">Week of ${item[0].date}: ${formatNumber(caseAvg)}</span></td>`);
+            weeklyActiveHistory.push(`<td style="--size:calc(${activeHeight}/100);"><span class="tooltip">Week of ${item[0].date}: ${formatNumber(activeAvg)}</span></td>`);
         }
         weeklyCasesHistory.push(`</tr><tr>`);
+        weeklyActiveHistory.push(`</tr><tr>`);
 
         for (const item of lastWeek.slice(0)) {
             const caseValue = item.change_cases || 0;
-            const doseHeight = (maxCases > 0 ? Math.round(caseValue / maxCases * 100) : 0) || 5;
-            weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(caseValue)}</span> </td>`);
+            const activeValue = (item.total_cases || 0) - (item.total_fatalities || 0) - (item.total_recoveries || 0);
+            const caseHeight = (caseMax > 0 ? Math.round(caseValue / caseMax * 100) : 0) || 5;
+            const activeHeight = (activeMax > 0 ? Math.round(activeValue / activeMax * 100) : 0) || 5;
+            weeklyCasesHistory.push(`<td style="--size:calc(${caseHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(caseValue)}</span> </td>`);
+            weeklyActiveHistory.push(`<td style="--size:calc(${activeHeight}/100);"><span class="tooltip">${item.date}: ${formatNumber(activeValue)}</span> </td>`);
         }
-        const doseHeight = (maxCases > 0 ? Math.round((currentChangeCases || 0) / maxCases * 100) : 0) || 5;
-        weeklyCasesHistory.push(`<td style="--size:calc(${doseHeight}/100); --color: var(--red);"><span class="tooltip">Today: ${formatNumber(currentChangeCases)}</span> </td>`);
+        const caseHeight = (caseMax > 0 ? Math.round((currentChangeCases || 0) / caseMax * 100) : 0) || 5;
+        const activeHeight = (activeMax > 0 ? Math.round((currentActive || 0) / activeMax * 100) : 0) || 5;
+        weeklyCasesHistory.push(`<td style="--size:calc(${caseHeight}/100);"><span class="tooltip">Today: ${formatNumber(currentChangeCases)}</span> </td>`);
         weeklyCasesHistory.push(`</tr></tbody></table></div>`);
 
-        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalCases)}<br>Today: ${format(currentChangeCases)}<br>Yesterday: ${format(yesterday.change_cases)}<br>Population: ${format(maxCases)}">` +
+        weeklyActiveHistory.push(`<td style="--size:calc(${activeHeight}/100);"><span class="tooltip">Today: ${formatNumber(currentActive)}</span> </td>`);
+        weeklyActiveHistory.push(`</tr></tbody></table></div>`);
+
+        return `<tr class="vaccine ${data.code ? "province" : "healthregion"} ${data.code||data.province} " data-toggle="tooltiprow" data-placement="bottom" data-html="true" title="Total: ${format(totalCases)}<br>Today: ${format(currentChangeCases)}<br>Yesterday: ${format(yesterday.change_cases)}<br>Population: ${format(caseMax)}">` +
             `<td>${htmlName}</td>` +
             `<td class="cases history">${weeklyCasesHistory.join('')}</td>` +
             `<td class="activecases today" data-rate="${changeInActiveRate}">${formatNumber(currentChangeCases)}</td>` +
+            `<td class="activecases history">${weeklyActiveHistory.join('')}</td>` +
             `<td class="activecases per100k"><div class="progressbar ${activePer100k < 10 ? "green" : activePer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : activePer100k < 100 ? "red" : "black"}" aria-valuenow="${activePer100k}" data-value="${formatNumber(currentActive)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(activePer100k/(activePer100k < 10 ? 10 : activePer100k < 25 ? 25 : activePer100k < 40 ? 40 : activePer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
             `<td class="hospitalized per1000k"><div class="progressbar ${hospitalizedPer100k < 10 ? "green" : hospitalizedPer100k < 25 ? "yellow" : activePer100k < 40 ? "orange" : hospitalizedPer100k < 100 ? "red" : "black"}" aria-valuenow="${hospitalizedPer100k}" data-value="${formatNumber(currentHospitalized)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(hospitalizedPer100k/(hospitalizedPer100k < 10 ? 10 : hospitalizedPer100k < 25 ? 25 : hospitalizedPer100k < 40 ? 40 : hospitalizedPer100k < 100 ? 100 : 150)*100, 100)}%"></span></div></td>` +
             `<td class="positivity"><div class="progressbar" role="progressbar" aria-valuenow="${currentPositivityRate}" data-value="${formatNumber(currentChangeTests)}" aria-labelledby="provinceID tableHeaderID"><span class="value" aria-hidden="true" style="width: ${Math.min(currentPositivityRate/10*100, 100)}%"></span></div></td>` +

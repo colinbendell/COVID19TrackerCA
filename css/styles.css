@@ -10830,36 +10830,47 @@ thead tr th {
   text-align: center !important;
 }
 
-.dose.history div {
-  height: 1.5rem;  width: 7rem;  margin: 0 auto;
+.history div {
+  height: 2rem;
+  width: 7rem;
+  margin: -0.5rem auto;
 }
+
+.history table.column td {
+  margin-inline-start: 1px;
+}
+
+.history .tooltip {
+  bottom: 150%;
+}
+
 .dose.history table.column {
   --color-1: rgba(0, 123, 255, 0.2);
   --color-2: rgba(0, 123, 255, 0.6);
 }
 
-.dose.history table.column td {
-  margin-inline-start: 1px;
-}
-
-.dose.history .tooltip {
-  bottom: 150%;
-}
-
-.cases.history div {
-  height: 1.5rem;  width: 7rem;  margin: 0 auto;
-}
 .cases.history table.column {
   --color-1: rgba(220, 53, 69, 0.2);
   --color-2: rgba(220, 53, 69, 0.6);
 }
-
-.cases.history table.column td {
-  margin-inline-start: 1px;
+.dose.history table tbody tr:last-child td:last-child {
+  --color: var(--blue);
 }
 
-.cases.history .tooltip {
-  bottom: 150%;
+.cases.history table.column {
+  --color-1: rgba(220, 53, 69, 0.2);
+  --color-2: rgba(220, 53, 69, 0.6);
+}
+.cases.history table tbody tr:last-child td:last-child {
+  --color: var(--red);
+}
+
+.activecases.history table.column {
+  --color-1: rgba(253, 126, 20, 0.2);
+  --color-2: rgba(253, 126, 20, 0.6);
+}
+.activecases.history table tbody tr:last-child td:last-child {
+  --color: var(--orange);
 }
 
 td[data-rate].activecases::after {
