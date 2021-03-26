@@ -10641,7 +10641,7 @@ td[data-rate]:empty::after {
   background-color: var(--red);
 }
 
-.per100k .progressbar:not([data-value="N/A"])::after, .per1000k .progressbar:not([data-value="N/A"])::after {
+.per100k .progressbar:not([data-value="N/A"]):not([data-value="0"])::after, .per1000k .progressbar:not([data-value="N/A"]):not([data-value="0"])::after {
   content: attr(data-value);
 }
 

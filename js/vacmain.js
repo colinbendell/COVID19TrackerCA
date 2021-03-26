@@ -235,6 +235,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     const provData = Object.keys(fullDataJson).map(k => Object.assign(fullDataJson[k], {code: k}));
     await buildProvinceTable(provData.filter(v => v.code !== 'CA'));
 
+    const canada = provData.filter(v => v.code === 'CA')[0]
+    document.getElementById("vaccinationsProvinceTableFooter").innerHTML = formatVaccineTable(canada);
+    document.getElementById("casesProvinceTableFooter").innerHTML = formatVaccineTable(canada, false);
+
     // draw new and cumulative cases graphs
     // $.ajax({
     //     url: api_url + "reports.json",
@@ -381,7 +385,7 @@ function formatVaccineTable(data = {updated_at: 0, data_status: "Unknown", popul
     let htmlName = data.name?.en || data.name;
     if (data.data_status) {
         htmlName = `<button onclick="toggleHealthRegions('${data.code}')"></button>` +
-            `<span class='province-update-status status-${provinceStatus.toLowerCase().replace(/\s/gi, '-')}' data-toggle='tooltip' data-placement='bottom' data-html='true' title='` +
+            `<span class='province-update-status status-${provinceStatus.toLowerCase().replace(/\s/gi, '-')}' data-toggle='tooltiprow' data-placement='bottom' data-html='true' title='` +
             `Status: <b>${provinceStatus}</b><br>` +
             `Last updated: <b>${updatedAt}</b><br>` +
             `Update expected by: <b>${expectedTime(data.code)}</b>'>` +
